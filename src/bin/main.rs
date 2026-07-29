@@ -11,10 +11,15 @@ use esp_hal::clock::CpuClock;
 use esp_hal::i2c::master::{Config as I2cConfig, I2c};
 use esp_hal::main;
 use esp_hal::time::{Duration, Instant, Rate};
+
 use log::error;
 
+use core::fmt::Write;
 use embedded_graphics::prelude::Point;
+use heapless::String;
+
 use esp32_rust_oled_display::oled::Oled;
+use esp32_rust_oled_display::sonar::Sonar;
 
 #[panic_handler]
 fn panic(panic_info: &core::panic::PanicInfo) -> ! {
@@ -47,12 +52,28 @@ fn main() -> ! {
         .with_scl(peripherals.GPIO22);
 
     let mut oled = Oled::new(i2c).expect("Display init error");
+    let mut sonar = Sonar::new(peripherals.GPIO6, peripherals.GPIO7);
 
-    oled.show_text("Hello Stranger !!!", Point::new(10, 32))
-        .expect("Draw error");
+    // oled.show_text("Hello Strangerssss !!!", Point::new(10, 32))
+    //     .expect("Draw error");
 
     loop {
+        let mut line: String<24> = String::new();
+        match sonar.measure_mm() {
+            Ok(mm) => {
+                let _ = write!(line, "Value: {} mm", mm);
+            }
+            Err(e) => {
+                error!("sonar: {:?}", e);
+                let _ = write!(line, "Value: ---");
+            }
+        }
+
+        oled.clear().expect("Clear error");
+        oled.show_text(&line, Point::new(10, 32))
+            .expect("Draw error");
+        // delay.delay_millis(100);
         let delay_start = Instant::now();
-        while delay_start.elapsed() < Duration::from_millis(1000) {}
+        while delay_start.elapsed() < Duration::from_millis(100) {}
     }
 }
