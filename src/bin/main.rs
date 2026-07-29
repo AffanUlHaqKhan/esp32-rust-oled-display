@@ -13,16 +13,8 @@ use esp_hal::main;
 use esp_hal::time::{Duration, Instant, Rate};
 use log::error;
 
-use embedded_graphics::{
-    mono_font::{ascii::FONT_6X10, MonoTextStyle},
-    pixelcolor::BinaryColor,
-    prelude::*,
-    text::Text,
-};
-use ssd1306::mode::DisplayConfig;
-use ssd1306::rotation::DisplayRotation;
-use ssd1306::size::DisplaySize128x64;
-use ssd1306::{I2CDisplayInterface, Ssd1306};
+use embedded_graphics::prelude::Point;
+use esp32_rust_oled_display::oled::Oled;
 
 #[panic_handler]
 fn panic(panic_info: &core::panic::PanicInfo) -> ! {
@@ -54,18 +46,10 @@ fn main() -> ! {
         .with_sda(peripherals.GPIO21)
         .with_scl(peripherals.GPIO22);
 
-    let interface = I2CDisplayInterface::new(i2c);
-    let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
-        .into_buffered_graphics_mode();
+    let mut oled = Oled::new(i2c).expect("Display init error");
 
-    display.init().expect("Display init error");
-
-    let style = MonoTextStyle::new(&FONT_6X10, BinaryColor::On);
-    Text::new("Hello Stranger !!!", Point::new(10, 32), style)
-        .draw(&mut display)
+    oled.show_text("Hello Stranger !!!", Point::new(10, 32))
         .expect("Draw error");
-
-    display.flush().expect("Flush error");
 
     loop {
         let delay_start = Instant::now();

@@ -533,6 +533,7 @@ name = "esp32-rust-oled-display"
 version = "0.1.0"
 dependencies = [
  "critical-section",
+ "display-interface",
  "embedded-graphics",
  "embedded-hal",
  "esp-bootloader-esp-idf",
